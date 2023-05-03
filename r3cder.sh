@@ -1,107 +1,146 @@
 #!/bin/bash
 
+### By: Argon3x
+### Supported: Debian Based Systems and Termux
+### Version: 2.0
+
 export IFS='
 '
 
-# - COLORS - #
-green="\e[01;32m"; red="\e[01;31m"
-blue="\e[01;34m"; yellow="\e[01;33m"
-cyan="\e[01;36m"; purple="\e[01;35m"
-end="\e[00m"
+# Colors
+red='\033[01;31m'; green='\033[01;32m'; blue='\033[01;34m'
+yellow='\033[01;33m'; purple='\033[01;35m'; grey='\033[01;30m' end='\033[00m'
 
-# - CUSTOM VARIABLES - #
-NBOX="${blue}[${cyan}*${blue}]${end}"
+box="${blue}[${green}+${blue}]${end}"
 
-# - Functions - #
-function CTRL_C(){
-  echo -e "\n${red}>>> ${blue}Process Canceled${red} <<<${end}\n"
-  tput cnorm
-  exit 0
-}
-function ERROR(){
-  message="${1}"
-  echo -e "${red}Error${blue}: ${end}${1}"
+# function canceled and function error
+signal_canceled(){
+  echo -e "\n${blue}>>> ${red}Process Canceled ${blue}<<<${end}\n"
   tput cnorm
   exit 1
 }
-trap CTRL_C INT
-trap ERROR SIGTERM
+
+signal_error(){
+  error=$1
+
+  echo -e "\n${purple}Error${end}: ${grey}${error}\n"
+  tput cnorm
+  exit 1
+}
+
+# send the signal
+trap signal_canceled SIGINT
+trap signal_error SIGTERM
 
 
-function RECDER(){
-  local pathDirectory=${1}
+# show help menu
+help_menu(){
+  clear
+  local name_script=${0##*/}
+  
+  echo -e "${yellow}Help Menu from ${name_script%.*}${end}"
+  echo -e "${red}Warning${end}: ${blue}this script overwrite the files all of directory.${end}\n"
+  echo -e "${purple} -d\t${blue}select a specific directory.${end}"
+  echo -e "${purple} -h\t${blue}Show help menu.${end}\n"
+  echo -e "${green}use: ${purple}./${name_script} -d <Directory>${end}"
+}
 
-  if [[ ${pathDirectory: -1} == '/' ]]; then
-    local pathDirectory="${pathDirectory%?}"
+# overwrite in zero, rename in zero and delete the files.
+recder_files(){
+  local path="$1"
+
+  # check that the directory path does not end with a slash
+  [[ ${path: -1} == '/' ]] && local path="${path%?}"
+
+  # check if there are files inside the directory
+  file_exist=$(ls -A -U -X -r ${path} 2>/dev/null)
+
+  # iterate the directory
+  for i in ${file_exist}; do
+    # check file if exist 
+    if [ -f "${path}/${i}" ]; then
+      # total cores (threads)
+      declare -i cores=$(nproc)
+
+      # controls the flow of threads (default 10)
+      while [[ $(jobs | wc -l) -ge ${cores} ]]; do
+        sleep 1
+      done
+
+      echo -e "${grey}:> ${purple}overwriting file ${yellow}-> ${grey}$i${end}"
+      
+      # overwrite files to delete (default 2)
+      `nice -n 5 shred -fzu -n 2 ${path}/${i} 2>/dev/null &`
+      
+    else
+      # check that the directory contains files
+      if [ $(ls -A "${path}/${i}" | wc -l) -ne 0 ]; then
+        echo -e "${blue}(${green}overwrite in ${purple}${path}/${purple}${i}${blue})${end}"
+
+        # call the same function
+        recder_files "${path}/${i}"
+      fi
+    fi
+  done; wait
+}
+
+
+# check the parameters
+while getopts ':h:d:' args; do
+  case $args in
+    d) path_directory=$OPTARG; declare -i count=1 ;;
+    \?) signal_error "${red}the ${purple}-$OPTARG ${red}parameter is invalid, use -h for more help.${end}" ;;
+  esac
+done
+
+if [ $count -eq 1 ]; then
+  # check directory if exist 
+  clear && tput civis
+  echo -e "${box} ${yellow}Checking Directory ${blue}(${yellow}${path_directory##*/}${blue})${yellow}...........${end}\c"; sleep 0.4
+
+  if [ -d ${path_directory} ]; then
+    echo -e "${green} done ${end}"
+  else
+    echo -e "${red} faild ${end}\n"
+    signal_error "The ${path_directory} Not Exist"
   fi
 
-  local listFiles=$(ls -A ${pathDirectory} 2>/dev/null)
+  # Check that the directory is not empty
+  files_count=$(ls -A ${path_directory} 2>/dev/null | wc -l)
   
-  for file in ${listFiles}; do
-    if [[ -f ${pathDirectory}/${file} ]]; then
-      sleep 0.8
-      echo -e "${purple}-> ${red}Corroding ${blue}> ${purple}${file}${end}\c"
-      `shred -fzun2 ${pathDirectory}/${file} 2>/dev/null`
-      if  [[ $? -eq 0 ]]; then
-        echo -e "${green} done ${end}"
-      else
-        echo -e "${red} failed ${end}"
-        ERROR "${red}Error to Corroding ${end}"
-      fi
-    else
-      sleep 0.2
-      echo -e "${blue}>>> ${cyan}${pathDirectory}/${file}${end}"
-      newPathDirectory="${pathDirectory}/${file}"
-      RECDER "${newPathDirectory}"
+  echo -e "${box} ${yellow}Checking files...........${end}\c"; sleep 0.4
+  if [ $files_count -gt 0 ]; then
+    echo -e "${green} done ${end}"
+
+    # get directory weight
+    data=($(du -sh ${path_directory} | awk -F ' ' '{print $1}') $(du -sh ${path_directory} | awk -F ' ' '{print $2}'))
+
+    # count characters
+    chars=$(echo ${data[@]} | wc -c)
+
+    # function call to overwrite all files 
+    recder_files $path_directory
+    if [ $? -eq 0 ]; then
+      echo
+      for c in $(seq 0 ${chars}); do echo -e "${blue}-\c"; done; echo -e "-------------------------------${end}"
+      echo -e "${green} ${data[0]} ${yellow}of space has been freed in the ${green}${data[1]}${end}"
+      for c in $(seq 0 ${chars}); do echo -e "${blue}-\c"; done; echo -e "-------------------------------${end}"
+      echo
     fi
-  done
-}
 
+  else
+    echo -e "${red} faild ${end}"
 
-function HELP_MENU(){
-  clear
-  echo -e "${blue}Parameters:${end}"
-  echo -e "${purple} -d \tSpecify a Directory.${end}"
-  echo -e "${purple} -h \tShow the Help Menu.${end}"
-  echo -e "${purple} --help${end}"
-  echo -e "${blue}use: ${red}${0} -d <path directory>${end}"
-}
+    # count directory characters
+    count_char=$(echo ${path_directory##*/} | wc -c)
 
-sleep 0.4
-if [[ ${#} -eq 2 ]]; then
-  declare -i count=0
-  while getopts ":d:h:" args; do
-    case $args in
-      d) pathDirectory=$OPTARG; let count+=1;;
-      h) HELP_MENU ;;
-      *) HELP_MENU ;;
-    esac
-  done
-  if [[ ${count} -ne 0 ]]; then
-    clear; tput civis
-    echo -e "${NBOX} ${blue}Checking Directory${yellow}.......${end}\c"
-    sleep 1
-    if [[ -d ${pathDirectory} ]]; then
-      echo -e "${green} done ${end}"
-      sleep 1
-      countFiles=$(ls -A ${pathDirectory} 2>/dev/null | wc -l)
-      echo -e "${NBOX} ${blue}Checking Files${yellow}.......${end}\c"
-      sleep 1
-      if [[ ${countFiles} -ne 0 ]]; then
-        echo -e "${green} done ${end}"
-        RECDER "${pathDirectory}"
-      else
-        echo -e "${red} failed ${end}"
-        sleep 0.8
-        ERROR "${blue} No files in ${red}${pathDirectory} ${blue}directory${end}"
-      fi
-    else
-      echo -e "${red} failed ${end}"
-      sleep 0.8
-      ERROR "${blue}Directory ${red}${pathDirectory} ${blue}Not Exists${end}" 
-    fi
+    for c in $(seq 0 ${count_char}); do echo -e "${blue}-\c"; done; echo -e "------------------------------------${end}"
+    echo -e "${yellow} The ${blue}(${purple}${path_directory##*/}${blue}) ${yellow}directory is empty, try again${end}"
+    for c in $(seq 0 ${count_char}); do echo -e "${blue}-\c"; done; echo -e "------------------------------------${end}"
+
+    tput cnorm; exit 0
   fi
   tput cnorm
 else
-  HELP_MENU
+  help_menu
 fi
