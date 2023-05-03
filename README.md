@@ -12,17 +12,17 @@
 
 - Give permissions of execute to script
 
-	chmod u+x r3cder.sh
+		chmod u+x r3cder.sh
 
 
 - For more information about the script, use the parameter **-h** or **--help**
 
-	./r3cder.sh --help
+		./r3cder.sh --help
 
 
 - Example
 
-	./r3cder.sh -d <path directory>
+		./r3cder.sh -d <path directory>
 
 ### Sopported
 ![support](https://shields.io/badge/Supported%20on-Debian%20Based%20System%20and%20Termux-blue.svg?style=plastic)
