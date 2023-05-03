@@ -6,20 +6,23 @@
 
 ### Dependences
 
-##### *this script depends on the tput tool* 
-##### ( *termux ->* **ncurses-utils** - *debian ->* **ncurses-bin** )
+*this script depends on the tput tool* 
+( *termux ->* **ncurses-utils** - *debian ->* **ncurses-bin** )
 
 
-Give permissions of execute to script
+- Give permissions of execute to script
 
 	chmod u+x r3cder.sh
 
-For more information about the script, use the parameter **-h** or **--help**
+
+- For more information about the script, use the parameter **-h** or **--help**
 
 	./r3cder.sh --help
 
 
-### Example
+- Example
 
 	./r3cder.sh -d <path directory>
 
+### Sopported
+![support](https://shields.io/badge/Supported%20on-Debian%20Based%20System%20and%20Termux-blue.svg?style=plastic)
