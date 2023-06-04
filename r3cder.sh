@@ -96,7 +96,7 @@ done
 if [ $count -eq 1 ]; then
   # check directory if exist 
   clear && tput civis
-  echo -e "${box} ${yellow}Checking Directory ${blue}(${yellow}${path_directory##*/}${blue})${yellow}...........${end}\c"; sleep 0.4
+  echo -e "${box} ${yellow}Checking Directory ${blue}(${yellow}$(basename ${path_directory})${blue})${yellow}...........${end}\c"; sleep 0.4
 
   if [ -d ${path_directory} ]; then
     echo -e "${green} done ${end}"
