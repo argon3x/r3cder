@@ -1,28 +1,46 @@
-## r3cder
-------------
+# r3cder
 
-**A script that overwrite any media file, Which will make your recovery more difficult**.
+## Description
+
+A script that overwrite any media file, Which will make your recovery more difficult
 
 
 ### Dependences
 
-*this script depends on the tput tool* 
-( *termux ->* **ncurses-utils** - *debian ->* **ncurses-bin** )
+**This script depends on the tput tool**
 
+* Install on debian derivatives
 
-- Give permissions of execute to script
+```bash
+$ apt install ncurses-bin
+```
 
-		chmod u+x r3cder.sh
+* Install on termux
 
+```bash
+$ apt install ncurses-utils
+```
 
-- For more information about the script, use the parameter **-h** or **--help**
+### Use mode
 
-		./r3cder.sh --help
+* Give permissions of execute to script
 
+```bash
+$ chmod u+x r3cder.sh
+```
 
-- Example
+* For more information about the script, use the parameter `-h`
 
-		./r3cder.sh -d <path directory>
+```bash
+$ ./r3cder.sh -h
+```
 
-### Sopported
+* Use example
+
+```bash
+$ ./r3cder.sh -d <path directory>
+```
+
+#### Sopported
+
 ![support](https://shields.io/badge/Supported%20on-Debian%20Based%20System%20and%20Termux-blue.svg?style=plastic)
