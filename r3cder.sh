@@ -50,11 +50,11 @@ EOF
 overwriting_files(){
   local dirpath=$1
   
-  for file in $(ls -A1 $dirpath); do  
+  for file in $(ls -A1 $dirpath); do
     new_path="${dirpath}/${file}"
 
     if [[ -f $new_path ]]; then
-      echo -e "${blue}[${red}DESTROYING${blue}]${end} ${new_path}" 
+      echo -e "${blue}[${red}DESTROYING${blue}]${end} ${new_path}"
       shred -f -z -u -n 2 $new_path 2>/dev/null
     else
       overwriting_files $new_path
@@ -70,6 +70,9 @@ start_recder(){
   if ! [[ -d $dpath ]]; then
     signal_terminated "the directory does not exist"
   fi
+
+  # remove last character if '/'
+  [[ ${dpath: -1} == '/' ]] && dpath=${dpath%?}
 
   # get directory information
   directory_size=$(du -sh $dpath | awk -F ' ' '{print $1}')
@@ -100,7 +103,7 @@ if [[ $# -ne 0 ]]; then
         ;;
       h) help_menu
         ;;
-      v) echo -e "${green}${0##*/}${end} 3.0.0"
+      v) echo -e "${green}${0##*/}${end} 3.0.1"
         ;;
       d) start_recder $OPTARG
         ;;
